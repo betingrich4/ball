@@ -4,7 +4,7 @@
    ⚠️  IMPORTANT: Update API_BASE_URL after deploying the Worker!
    ============================================================ */
 
-const API_BASE_URL = 'https://ball.mariseltru.workers.dev/';
+const API_BASE_URL = 'https://h5-api.aoneroom.com/wefeed-h5api-bff';
 
 const AppState = {
     currentPage: 'home',
