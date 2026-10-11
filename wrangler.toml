@@ -1,0 +1,16 @@
+name = "moviebox-api-pro"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+# Since this is a plain fetch handler (not ES module worker),
+# keep the legacy format. If you use ES module `export default`,
+# set `type = "javascript"` and adjust the worker accordingly.
+
+# Optional: route for custom domain
+# [[routes]]
+# pattern = "api.yourdomain.com/*"
+# zone_name = "yourdomain.com"
+
+[vars]
+# Add environment variables here if needed
+ENVIRONMENT = "production"
