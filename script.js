@@ -5,7 +5,7 @@
    ============================================================ */
 
 /* ============ CONFIGURATION ============ */
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = 'https://h5-api.aoneroom.com/wefeed-h5api-bff';
 
 /* ============ APPLICATION STATE ============ */
 const AppState = {
