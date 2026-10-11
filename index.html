@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MovieBox Pro - Stream movies and TV shows with search, categories, and detailed information">
+    <title>MovieBox Pro | Stream Movies & TV Shows</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ============ HEADER / NAVIGATION ============ -->
+    <header class="main-header" id="mainHeader">
+        <div class="header-container">
+            <a href="#" class="logo" onclick="loadHomePage(event)">
+                <span class="logo-icon">🎬</span>
+                <span class="logo-text">MovieBox<span class="logo-accent">Pro</span></span>
+            </a>
+
+            <nav class="nav-links" id="navLinks">
+                <a href="#" class="nav-link active" data-page="home" onclick="loadHomePage(event)">Home</a>
+                <a href="#" class="nav-link" data-page="movies" onclick="loadMoviesPage(event)">Movies</a>
+                <a href="#" class="nav-link" data-page="tv" onclick="loadTvPage(event)">TV Series</a>
+                <a href="#" class="nav-link" data-page="animation" onclick="loadAnimationPage(event)">Animation</a>
+            </nav>
+
+            <div class="search-container" id="searchContainer">
+                <div class="search-wrapper">
+                    <span class="search-icon">🔍</span>
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        class="search-input" 
+                        placeholder="Search movies, TV shows..."
+                        autocomplete="off"
+                    >
+                    <button class="search-clear" id="searchClear" onclick="clearSearch()" style="display:none;">×</button>
+                </div>
+                <div id="searchResults" class="search-results"></div>
+            </div>
+
+            <button class="mobile-menu-toggle" id="mobileMenuToggle" onclick="toggleMobileMenu()">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- ============ MAIN CONTENT AREA ============ -->
+    <main class="main-content" id="mainContent">
+        <!-- Dynamic content is injected here by JavaScript -->
+        <div class="loading-screen">
+            <div class="loader"></div>
+            <p class="loader-text">Loading MovieBox Pro...</p>
+        </div>
+    </main>
+
+    <!-- ============ FOOTER ============ -->
+    <footer class="main-footer">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <span class="logo-icon">🎬</span>
+                <span class="logo-text">MovieBox<span class="logo-accent">Pro</span></span>
+            </div>
+            <p class="footer-note">Powered by MovieBox Pure REST API • Zero Scraping Architecture</p>
+            <p class="footer-credit">Developer: Walter • Version 2.1.5</p>
+        </div>
+    </footer>
+
+    <!-- ============ DETAIL / PLAYER MODAL ============ -->
+    <div id="detailModal" class="modal-overlay">
+        <div class="modal-content" id="modalContent">
+            <button class="modal-close" onclick="closeModal()" aria-label="Close modal">&times;</button>
+            <div id="modalBody">
+                <!-- Detail view and video player injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ TOAST NOTIFICATION ============ -->
+    <div id="toast" class="toast"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
