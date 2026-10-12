@@ -1,84 +1,989 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="MovieBox Pro — Stream movies and TV shows with search, categories, and rich detail views.">
-    <title>MovieBox Pro | Stream Movies & TV Shows</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>433 Football</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js"></script>
+<style>
+  :root{
+    --bg:#000000;
+    --panel:#0d0f11;
+    --panel2:#131518;
+    --line:#1e2226;
+    --txt:#ffffff;
+    --muted:#8a9099;
+    --yellow:#eaff00;
+    --live:#ff2b2b;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{background:var(--bg);color:var(--txt);font-family:'Inter',system-ui,sans-serif;}
+  body{padding-bottom:88px;overflow-x:hidden}
+  a{color:inherit;text-decoration:none}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  img{display:block;max-width:100%}
+
+  /* ============ LOGO ============ */
+  .logo{
+    font-weight:900;font-style:italic;letter-spacing:-2px;
+    font-size:24px;line-height:1;
+    display:inline-block;
+  }
+  .logo-big{font-size:80px;letter-spacing:-6px}
+  .logo span{color:var(--yellow)}
+
+  /* ============ TOP BAR ============ */
+  .topbar{
+    position:sticky;top:0;z-index:40;
+    background:rgba(0,0,0,.92);backdrop-filter:blur(14px);
+    padding:14px 16px;display:flex;align-items:center;gap:14px;
+    border-bottom:1px solid var(--line);
+  }
+  .topbar .logo{font-size:26px}
+
+  /* ============ SCREENS ============ */
+  .screen{display:none;animation:fade .25s ease}
+  .screen.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+  /* ============ ONBOARDING ============ */
+  .splash{
+    position:fixed;inset:0;background:var(--yellow);
+    display:flex;align-items:center;justify-content:center;
+    z-index:100;transition:opacity .5s;
+  }
+  .splash.hide{opacity:0;pointer-events:none}
+  .splash .logo{color:#000;font-size:88px;letter-spacing:-8px}
+  .splash .logo span{color:#000}
+
+  .onb{padding:20px 20px 140px;min-height:100vh}
+  .onb-title{font-size:20px;font-weight:800;text-align:center;margin:8px 0 24px}
+  .tabs{
+    display:flex;background:#1a1d21;border-radius:14px;padding:5px;
+    margin-bottom:22px;
+  }
+  .tabs button{
+    flex:1;padding:12px;border-radius:10px;font-weight:700;font-size:14px;
+    color:var(--muted);transition:.2s;
+  }
+  .tabs button.on{background:#2a2e33;color:#fff}
+  .searchbox{
+    display:flex;align-items:center;gap:10px;
+    background:#14171a;border:1px solid var(--line);border-radius:12px;
+    padding:14px 16px;margin-bottom:24px;
+  }
+  .searchbox input{
+    flex:1;background:none;border:none;outline:none;color:#fff;font-size:14px;
+  }
+  .searchbox input::placeholder{color:var(--muted)}
+  .searchbox svg{opacity:.6}
+
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 10px}
+  .pick{
+    display:flex;flex-direction:column;align-items:center;gap:8px;
+    padding:6px;position:relative;
+  }
+  .pick .ring{
+    width:86px;height:86px;border-radius:50%;
+    background:#14171a;display:grid;place-items:center;
+    border:2px solid transparent;position:relative;transition:.2s;
+  }
+  .pick.on .ring{border-color:var(--yellow);box-shadow:0 0 0 4px rgba(234,255,0,.14)}
+  .pick img{width:56px;height:56px;object-fit:contain}
+  .pick .flag{
+    position:absolute;bottom:2px;right:2px;width:26px;height:26px;border-radius:50%;
+    background:#0c0e10;border:2px solid #0c0e10;object-fit:cover;
+  }
+  .pick .lbl{font-size:11px;color:#d4d7db;text-align:center;line-height:1.25}
+
+  .onb-footer{
+    position:fixed;left:0;right:0;bottom:0;background:#000;
+    padding:16px 20px 26px;border-top:1px solid var(--line);
+  }
+  .selected-row{display:flex;gap:10px;margin-bottom:14px;align-items:center}
+  .selected-row .chip{
+    width:46px;height:46px;border-radius:50%;background:#14171a;
+    display:grid;place-items:center;position:relative;border:1px solid var(--line);
+  }
+  .selected-row .chip img{width:30px;height:30px;object-fit:contain}
+  .selected-row .chip .x{
+    position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;
+    background:#3a3e44;color:#fff;font-size:11px;display:grid;place-items:center;
+  }
+  .selected-lbl{font-size:12px;color:var(--muted);margin-bottom:10px;font-weight:700}
+
+  .btn-primary{
+    width:100%;background:var(--yellow);color:#000;
+    padding:17px;border-radius:12px;font-weight:800;font-size:15px;
+    letter-spacing:.3px;
+  }
+  .btn-primary:disabled{opacity:.4}
+  .btn-ghost{
+    width:100%;text-align:center;color:var(--yellow);
+    padding:14px;font-weight:700;font-size:14px;margin-top:6px;
+  }
+
+  /* ============ HOME ============ */
+  .hero{
+    position:relative;height:280px;overflow:hidden;
+    background:#111;
+  }
+  .hero img{width:100%;height:100%;object-fit:cover;filter:brightness(.55)}
+  .hero-overlay{
+    position:absolute;inset:0;
+    background:linear-gradient(180deg,rgba(0,0,0,.4),rgba(0,0,0,.9));
+    padding:20px;display:flex;flex-direction:column;justify-content:flex-end;
+  }
+  .hero .logo{position:absolute;top:16px;left:20px;color:#fff}
+  .hero h1{font-size:26px;font-weight:900;line-height:1.15;margin-bottom:14px}
+  .hero-tags{display:flex;gap:10px}
+  .tag{
+    background:rgba(255,255,255,.15);backdrop-filter:blur(6px);
+    padding:7px 14px;border-radius:20px;font-size:12px;font-weight:600;
+  }
+  .dots{
+    position:absolute;bottom:20px;right:20px;display:flex;gap:6px;
+  }
+  .dots span{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.35)}
+  .dots span.on{background:var(--yellow);width:20px;border-radius:3px}
+
+  .section-head{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:22px 16px 12px;
+  }
+  .section-head h2{font-size:20px;font-weight:800}
+  .section-head a{color:var(--muted);font-size:22px}
+
+  /* NEWS CARD */
+  .news-list{padding:0 16px;display:flex;flex-direction:column;gap:12px}
+  .news{
+    display:flex;background:var(--panel);border-radius:var(--radius);
+    overflow:hidden;border:1px solid var(--line);
+  }
+  .news img{width:130px;min-height:110px;object-fit:cover;flex-shrink:0}
+  .news .info{padding:12px 14px;display:flex;flex-direction:column;justify-content:space-between;flex:1}
+  .news h3{font-size:14px;font-weight:700;line-height:1.35;margin-bottom:12px}
+  .news .meta{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted)}
+  .badges{display:flex}
+  .badges img{
+    width:22px;height:22px;border-radius:50%;object-fit:contain;
+    background:#1a1d21;border:2px solid var(--panel);margin-left:-8px;
+  }
+  .badges img:first-child{margin-left:0}
+  .badges .more{
+    width:22px;height:22px;border-radius:50%;background:#3a3e44;
+    display:grid;place-items:center;font-size:9px;font-weight:700;
+    margin-left:-8px;border:2px solid var(--panel);
+  }
+
+  /* LIVE MATCH CARD */
+  .match-list{padding:0 16px;display:flex;flex-direction:column;gap:12px}
+  .match{
+    background:var(--panel);border:1px solid var(--line);
+    border-radius:var(--radius);padding:16px;cursor:pointer;
+    transition:.15s;
+  }
+  .match:active{transform:scale(.99)}
+  .match-top{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:14px;font-size:11px;color:var(--muted);
+    text-transform:uppercase;letter-spacing:.8px;font-weight:700;
+  }
+  .pill{padding:4px 10px;border-radius:20px;font-size:10px;font-weight:800}
+  .pill.live{background:rgba(255,43,43,.15);color:var(--live)}
+  .pill.live::before{content:'●';margin-right:5px;animation:blink 1s infinite}
+  @keyframes blink{50%{opacity:.3}}
+  .pill.ended{background:#1e2226;color:var(--muted)}
+  .pill.upcoming{background:rgba(234,255,0,.12);color:var(--yellow)}
+  .row-team{display:flex;align-items:center;gap:12px;padding:8px 0}
+  .row-team img{width:32px;height:32px;object-fit:contain}
+  .row-team .nm{flex:1;font-weight:600;font-size:15px}
+  .row-team .sc{font-weight:900;font-size:20px;min-width:26px;text-align:right}
+  .row-team.win .sc{color:var(--yellow)}
+  .divider{height:1px;background:var(--line);margin:4px 0}
+  .btn-watch{
+    margin-top:14px;width:100%;background:var(--yellow);color:#000;
+    padding:12px;border-radius:10px;font-weight:800;font-size:13px;
+    letter-spacing:.4px;
+  }
+
+  /* ============ PLAYER (in-app) ============ */
+  .player-screen{
+    position:fixed;inset:0;background:#000;z-index:200;
+    display:none;flex-direction:column;
+  }
+  .player-screen.on{display:flex}
+  .player-head{
+    display:flex;align-items:center;gap:12px;padding:14px 16px;
+    background:#000;border-bottom:1px solid var(--line);
+  }
+  .player-head .close{
+    width:36px;height:36px;border-radius:50%;background:#14171a;
+    display:grid;place-items:center;
+  }
+  .player-head .title{font-weight:700;font-size:14px;flex:1}
+  .video-wrap{
+    position:relative;width:100%;background:#000;
+    aspect-ratio:16/9;display:grid;place-items:center;
+  }
+  .video-wrap video{width:100%;height:100%;background:#000}
+  .player-note{
+    padding:16px;color:var(--muted);font-size:12px;text-align:center;
+  }
+  .channels{
+    display:flex;gap:8px;padding:14px 16px;overflow-x:auto;
+  }
+  .channels button{
+    padding:9px 16px;border-radius:20px;background:#14171a;
+    color:#cbd1d8;font-size:12px;font-weight:700;white-space:nowrap;
+  }
+  .channels button.on{background:var(--yellow);color:#000}
+
+  /* ============ PROFILE ============ */
+  .profile-hero{
+    position:relative;height:520px;
+    background:
+      radial-gradient(circle at 50% 30%, rgba(234,255,0,.08), transparent 60%),
+      #0a0a0a;
+    overflow:hidden;
+    border-bottom:1px solid var(--line);
+  }
+  .pitch-lines{position:absolute;inset:0;opacity:.7}
+  .pitch-lines::before{
+    content:'';position:absolute;left:50%;top:0;bottom:0;width:2px;
+    background:var(--yellow);transform:translateX(-50%);
+  }
+  .pitch-lines::after{
+    content:'';position:absolute;left:50%;top:46%;width:110px;height:110px;
+    border:2px solid var(--yellow);border-radius:50%;transform:translate(-50%,-50%);
+  }
+  .pitch-circle{
+    position:absolute;left:50%;top:46%;width:150px;height:150px;
+    border:2px solid var(--yellow);border-radius:50%;transform:translate(-50%,-50%);
+    z-index:2;
+  }
+  .avatar-wrap{
+    position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);
+    z-index:3;
+  }
+  .avatar{
+    width:130px;height:130px;border-radius:50%;
+    background:#14171a;border:3px solid var(--yellow);
+    display:grid;place-items:center;overflow:hidden;
+  }
+  .avatar svg{width:80px;height:80px;color:#2a2e33}
+  .avatar-edit{
+    position:absolute;bottom:6px;right:6px;
+    width:34px;height:34px;border-radius:50%;background:#2a2e33;
+    display:grid;place-items:center;border:3px solid #0a0a0a;
+  }
+  .p-username{
+    position:absolute;top:24px;left:0;right:0;text-align:center;
+    font-size:13px;font-weight:700;color:#d4d7db;
+  }
+  .p-settings{
+    position:absolute;top:18px;right:18px;
+    width:38px;height:38px;border-radius:50%;background:#14171a;
+    display:grid;place-items:center;
+  }
+  .p-name{
+    position:absolute;bottom:120px;left:20px;
+    font-size:30px;font-weight:900;letter-spacing:-.5px;
+  }
+  .p-actions{
+    position:absolute;bottom:36px;left:20px;right:20px;
+    display:flex;gap:10px;
+  }
+  .p-actions button{
+    flex:1;padding:14px;border-radius:12px;font-weight:800;font-size:13px;
+    background:#1a1d21;color:#fff;display:flex;align-items:center;
+    justify-content:center;gap:8px;
+  }
+  .p-actions .finish{
+    background:#2a2e33;color:#cbd1d8;
+  }
+  .p-actions .finish .ring{
+    width:16px;height:16px;border:2px solid var(--yellow);
+    border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .fav-block{padding:24px 20px}
+  .fav-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+  .fav-head h2{font-size:22px;font-weight:900}
+  .fav-head button{color:var(--yellow);font-weight:800;font-size:14px;display:flex;align-items:center;gap:6px}
+  .fav-list{display:flex;gap:14px;flex-wrap:wrap}
+  .fav{display:flex;flex-direction:column;align-items:center;gap:8px;width:76px}
+  .fav .ring{
+    width:70px;height:70px;border-radius:50%;background:#14171a;
+    display:grid;place-items:center;border:1px solid var(--line);
+  }
+  .fav img{width:44px;height:44px;object-fit:contain}
+  .fav span{font-size:11px;color:#d4d7db;text-align:center}
+
+  /* ============ BOTTOM NAV ============ */
+  .bottom-nav{
+    position:fixed;bottom:0;left:0;right:0;z-index:60;
+    background:rgba(10,10,10,.96);backdrop-filter:blur(16px);
+    border-top:1px solid var(--line);
+    display:flex;justify-content:space-around;
+    padding:12px 0 max(12px, env(safe-area-inset-bottom));
+  }
+  .bottom-nav button{
+    display:flex;flex-direction:column;align-items:center;gap:4px;
+    color:var(--muted);font-size:11px;font-weight:700;
+    padding:6px 20px;
+  }
+  .bottom-nav button.on{color:var(--yellow)}
+  .bottom-nav svg{width:24px;height:24px}
+
+  /* ============ MISC ============ */
+  .loading{display:flex;justify-content:center;padding:50px}
+  .loading::after{
+    content:'';width:30px;height:30px;border-radius:50%;
+    border:3px solid #222;border-top-color:var(--yellow);
+    animation:spin .8s linear infinite;
+  }
+  .err{
+    background:rgba(255,43,43,.1);border:1px solid rgba(255,43,43,.3);
+    color:#ff8a80;padding:14px;border-radius:10px;font-size:13px;margin:0 16px;
+  }
+  .toast{
+    position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:#1e2226;color:#fff;padding:12px 20px;border-radius:30px;
+    font-size:13px;font-weight:600;opacity:0;transition:.3s;z-index:300;
+    pointer-events:none;
+  }
+  .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
 </head>
 <body>
 
-    <!-- ============ HEADER ============ -->
-    <header class="main-header" id="mainHeader">
-        <div class="header-container">
-            <a href="#" class="logo" onclick="loadHomePage(event)">
-                <span class="logo-icon">🎬</span>
-                <span class="logo-text">MovieBox<span class="logo-accent">Pro</span></span>
-            </a>
+<!-- =============== SPLASH =============== -->
+<div class="splash" id="splash">
+  <div class="logo logo-big">4<span>33</span></div>
+</div>
 
-            <nav class="nav-links" id="navLinks">
-                <a href="#" class="nav-link active" data-page="home" onclick="loadHomePage(event)">Home</a>
-                <a href="#" class="nav-link" data-page="movies" onclick="loadMoviesPage(event)">Movies</a>
-                <a href="#" class="nav-link" data-page="tv" onclick="loadTvPage(event)">TV Series</a>
-                <a href="#" class="nav-link" data-page="animation" onclick="loadAnimationPage(event)">Animation</a>
-            </nav>
-
-            <div class="search-container" id="searchContainer">
-                <div class="search-wrapper">
-                    <span class="search-icon">🔍</span>
-                    <input
-                        type="text"
-                        id="searchInput"
-                        class="search-input"
-                        placeholder="Search movies, TV shows..."
-                        autocomplete="off"
-                    >
-                    <button class="search-clear" id="searchClear" onclick="clearSearch()" style="display:none;">×</button>
-                </div>
-                <div id="searchResults" class="search-results"></div>
-            </div>
-
-            <button class="mobile-menu-toggle" id="mobileMenuToggle" onclick="toggleMobileMenu()" aria-label="Menu">
-                <span></span><span></span><span></span>
-            </button>
-        </div>
-    </header>
-
-    <!-- ============ MAIN ============ -->
-    <main class="main-content" id="mainContent">
-        <div class="loading-screen">
-            <div class="loader"></div>
-            <p class="loader-text">Loading MovieBox Pro...</p>
-        </div>
-    </main>
-
-    <!-- ============ FOOTER ============ -->
-    <footer class="main-footer">
-        <div class="footer-container">
-            <div class="footer-brand">
-                <span class="logo-icon">🎬</span>
-                <span class="logo-text">MovieBox<span class="logo-accent">Pro</span></span>
-            </div>
-            <p class="footer-note">Powered by Cloudflare Workers • Live MovieBox API</p>
-            <p class="footer-credit">Developer: Walter • Version 2.2.0</p>
-        </div>
-    </footer>
-
-    <!-- ============ MODAL ============ -->
-    <div id="detailModal" class="modal-overlay">
-        <div class="modal-content" id="modalContent">
-            <button class="modal-close" onclick="closeModal()" aria-label="Close modal">&times;</button>
-            <div id="modalBody"></div>
-        </div>
+<!-- =============== ONBOARDING =============== -->
+<div class="screen" id="screen-onb">
+  <div class="onb">
+    <div class="onb-title" id="onb-title">Favourites</div>
+    <div class="tabs">
+      <button class="on" data-tab="teams">Teams</button>
+      <button data-tab="leagues">Leagues</button>
     </div>
+    <div class="searchbox">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8a9099" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="onb-search" placeholder="Search for clubs, leagues..." />
+    </div>
+    <div class="grid3" id="onb-grid"></div>
+  </div>
+  <div class="onb-footer">
+    <div class="selected-lbl">Selected (<span id="sel-count">0</span>)</div>
+    <div class="selected-row" id="sel-row"></div>
+    <button class="btn-primary" id="onb-continue" disabled>Continue</button>
+    <button class="btn-ghost" id="onb-skip">Skip</button>
+  </div>
+</div>
 
-    <!-- ============ TOAST ============ -->
-    <div id="toast" class="toast"></div>
+<!-- =============== HOME =============== -->
+<div class="screen" id="screen-home">
+  <div class="hero">
+    <img id="hero-img" src="https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=1200" alt="">
+    <div class="hero-overlay">
+      <div class="logo">4<span>33</span></div>
+      <h1 id="hero-title">Daily Mystery Quiz #239</h1>
+      <div class="hero-tags">
+        <div class="tag" id="hero-tag">Quiz</div>
+        <div class="tag" id="hero-time">10h</div>
+      </div>
+      <div class="dots"><span></span><span></span><span class="on"></span></div>
+    </div>
+  </div>
 
-    <script src="script.js"></script>
+  <div class="section-head">
+    <h2>News</h2>
+    <a href="#">&rsaquo;</a>
+  </div>
+  <div class="news-list" id="news-list"><div class="loading"></div></div>
+
+  <div class="section-head">
+    <h2>Live &amp; Recent</h2>
+    <a href="#">&rsaquo;</a>
+  </div>
+  <div class="match-list" id="match-list"><div class="loading"></div></div>
+</div>
+
+<!-- =============== MATCHES =============== -->
+<div class="screen" id="screen-matches">
+  <div class="topbar"><div class="logo">4<span>33</span></div><div style="font-weight:800;font-size:16px">Matches</div></div>
+  <div style="padding:16px 16px 4px"><div style="font-size:13px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px">Live Scores</div></div>
+  <div class="match-list" id="match-list-2" style="margin-top:12px"><div class="loading"></div></div>
+</div>
+
+<!-- =============== PROFILE =============== -->
+<div class="screen" id="screen-profile">
+  <div class="profile-hero">
+    <div class="pitch-lines"></div>
+    <div class="pitch-circle"></div>
+    <div class="p-username" id="p-username">richard_lughano</div>
+    <div class="p-settings">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </div>
+    <div class="avatar-wrap">
+      <div class="avatar" id="avatar-box">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0 2c-5.33 0-8 2.67-8 6v2h16v-2c0-3.33-2.67-6-8-6z"/></svg>
+      </div>
+      <button class="avatar-edit">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 1 1 3 3L7 19l-4 1 1-4Z"/></svg>
+      </button>
+    </div>
+    <div class="p-name" id="p-name">Richard</div>
+    <div class="p-actions">
+      <button>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Squad
+      </button>
+      <button class="finish">
+        <span class="ring"></span>
+        Finish your profile
+      </button>
+    </div>
+  </div>
+
+  <div class="fav-block">
+    <div class="fav-head">
+      <h2>My favourites</h2>
+      <button id="fav-add">+ Add</button>
+    </div>
+    <div class="fav-list" id="fav-list"></div>
+  </div>
+</div>
+
+<!-- =============== IN-APP PLAYER =============== -->
+<div class="player-screen" id="player">
+  <div class="player-head">
+    <button class="close" id="player-close">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+    <div class="title" id="player-title">Live Match</div>
+  </div>
+  <div class="video-wrap">
+    <video id="video" controls playsinline webkit-playsinline autoplay></video>
+  </div>
+  <div class="channels" id="channels"></div>
+  <div class="player-note" id="player-note">Streaming inside the app. No redirects.</div>
+</div>
+
+<!-- ============ BOTTOM NAV ============ */
+  .bottom-nav{
+    position:fixed;bottom:0;left:0;right:0;z-index:60;
+    background:rgba(10,10,10,.96);backdrop-filter:blur(16px);
+    border-top:1px solid var(--line);
+    display:flex;justify-content:space-around;
+    padding:12px 0 max(12px, env(safe-area-inset-bottom));
+  }
+  .bottom-nav button{
+    display:flex;flex-direction:column;align-items:center;gap:4px;
+    color:var(--muted);font-size:11px;font-weight:700;
+    padding:6px 20px;
+  }
+  .bottom-nav button.on{color:var(--yellow)}
+  .bottom-nav svg{width:24px;height:24px}
+
+  /* ============ MISC ============ */
+  .loading{display:flex;justify-content:center;padding:50px}
+  .loading::after{
+    content:'';width:30px;height:30px;border-radius:50%;
+    border:3px solid #222;border-top-color:var(--yellow);
+    animation:spin .8s linear infinite;
+  }
+  .err{
+    background:rgba(255,43,43,.1);border:1px solid rgba(255,43,43,.3);
+    color:#ff8a80;padding:14px;border-radius:10px;font-size:13px;margin:0 16px;
+  }
+  .toast{
+    position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:#1e2226;color:#fff;padding:12px 20px;border-radius:30px;
+    font-size:13px;font-weight:600;opacity:0;transition:.3s;z-index:300;
+    pointer-events:none;
+  }
+  .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- =============== SPLASH =============== -->
+<div class="splash" id="splash">
+  <div class="logo logo-big">4<span>33</span></div>
+</div>
+
+<!-- =============== ONBOARDING =============== -->
+<div class="screen" id="screen-onb">
+  <div class="onb">
+    <div class="onb-title" id="onb-title">Favourites</div>
+    <div class="tabs">
+      <button class="on" data-tab="teams">Teams</button>
+      <button data-tab="leagues">Leagues</button>
+    </div>
+    <div class="searchbox">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8a9099" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="onb-search" placeholder="Search for clubs, leagues..." />
+    </div>
+    <div class="grid3" id="onb-grid"></div>
+  </div>
+  <div class="onb-footer">
+    <div class="selected-lbl">Selected (<span id="sel-count">0</span>)</div>
+    <div class="selected-row" id="sel-row"></div>
+    <button class="btn-primary" id="onb-continue" disabled>Continue</button>
+    <button class="btn-ghost" id="onb-skip">Skip</button>
+  </div>
+</div>
+
+<!-- =============== HOME =============== -->
+<div class="screen" id="screen-home">
+  <div class="hero">
+    <img id="hero-img" src="https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=1200" alt="">
+    <div class="hero-overlay">
+      <div class="logo">4<span>33</span></div>
+      <h1 id="hero-title">Daily Mystery Quiz #239</h1>
+      <div class="hero-tags">
+        <div class="tag" id="hero-tag">Quiz</div>
+        <div class="tag" id="hero-time">10h</div>
+      </div>
+      <div class="dots"><span></span><span></span><span class="on"></span></div>
+    </div>
+  </div>
+
+  <div class="section-head">
+    <h2>News</h2>
+    <a href="#">&rsaquo;</a>
+  </div>
+  <div class="news-list" id="news-list"><div class="loading"></div></div>
+
+  <div class="section-head">
+    <h2>Live &amp; Recent</h2>
+    <a href="#">&rsaquo;</a>
+  </div>
+  <div class="match-list" id="match-list"><div class="loading"></div></div>
+</div>
+
+<!-- =============== MATCHES =============== -->
+<div class="screen" id="screen-matches">
+  <div class="topbar"><div class="logo">4<span>33</span></div><div style="font-weight:800;font-size:16px">Matches</div></div>
+  <div style="padding:16px 16px 4px"><div style="font-size:13px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px">Live Scores</div></div>
+  <div class="match-list" id="match-list-2" style="margin-top:12px"><div class="loading"></div></div>
+</div>
+
+<!-- =============== PROFILE =============== -->
+<div class="screen" id="screen-profile">
+  <div class="profile-hero">
+    <div class="pitch-lines"></div>
+    <div class="pitch-circle"></div>
+    <div class="p-username" id="p-username">richard_lughano</div>
+    <div class="p-settings">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </div>
+    <div class="avatar-wrap">
+      <div class="avatar" id="avatar-box">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0 2c-5.33 0-8 2.67-8 6v2h16v-2c0-3.33-2.67-6-8-6z"/></svg>
+      </div>
+      <button class="avatar-edit">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 1 1 3 3L7 19l-4 1 1-4Z"/></svg>
+      </button>
+    </div>
+    <div class="p-name" id="p-name">Richard</div>
+    <div class="p-actions">
+      <button>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Squad
+      </button>
+      <button class="finish">
+        <span class="ring"></span>
+        Finish your profile
+      </button>
+    </div>
+  </div>
+
+  <div class="fav-block">
+    <div class="fav-head">
+      <h2>My favourites</h2>
+      <button id="fav-add">+ Add</button>
+    </div>
+    <div class="fav-list" id="fav-list"></div>
+  </div>
+</div>
+
+<!-- =============== IN-APP PLAYER =============== -->
+<div class="player-screen" id="player">
+  <div class="player-head">
+    <button class="close" id="player-close">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+    <div class="title" id="player-title">Live Match</div>
+  </div>
+  <div class="video-wrap">
+    <video id="video" controls playsinline webkit-playsinline autoplay></video>
+  </div>
+  <div class="channels" id="channels"></div>
+  <div class="player-note" id="player-note">Streaming inside the app. No redirects.</div>
+</div>
+
+<!-- =============== BOTTOM NAV =============== -->
+<nav class="bottom-nav" id="bottom-nav" style="display:none">
+  <button data-screen="home" class="on">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>
+    Home
+  </button>
+  <button data-screen="matches">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>
+    Matches
+  </button>
+  <button data-screen="profile">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+    Profile
+  </button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   44 Football — powered by https://apis.keithsite.lol
+   ========================================================= */
+const API = 'https://apis.keithsite.lol';
+
+/* ---------- helpers ---------- */
+const $  = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'), 2000);
+}
+async function api(path){
+  const r = await fetch(API + path);
+  if(!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+function showScreen(id){
+  $$('.screen').forEach(s=>s.classList.remove('active'));
+  $('#screen-'+id)?.classList.add('active');
+  window.scrollTo({top:0,behavior:'instant'});
+  $$('.bottom-nav button').forEach(b=>b.classList.toggle('on', b.dataset.screen===id));
+}
+
+/* =========================================================
+   1) SPLASH -> ONBOARDING
+   ========================================================= */
+setTimeout(()=>{
+  $('#splash').classList.add('hide');
+  const saved = localStorage.getItem('433_user');
+  if(saved){
+    applyUser(JSON.parse(saved));
+    $('#bottom-nav').style.display = 'flex';
+    showScreen('home');
+    boot();
+  }else{
+    showScreen('onb');
+  }
+}, 1600);
+
+/* =========================================================
+   2) ONBOARDING
+   ========================================================= */
+const TEAM_POOL = [
+  {name:'Real Madrid',   img:'https://upload.wikimedia.org/wikipedia/commons/5/56/Real_Madrid_CF.svg',   flag:'https://flagcdn.com/w40/es.png'},
+  {name:'Barcelona',     img:'https://upload.wikimedia.org/wikipedia/commons/4/47/FC_Barcelona_%28crest%29.svg', flag:'https://flagcdn.com/w40/es.png'},
+  {name:'Manchester City', img:'https://upload.wikimedia.org/wikipedia/commons/e/eb/Manchester_City_FC_badge.svg', flag:'https://flagcdn.com/w40/gb-eng.png'},
+  {name:'Manchester United', img:'https://upload.wikimedia.org/wikipedia/commons/7/7a/Manchester_United_FC_crest.svg', flag:'https://flagcdn.com/w40/gb-eng.png'},
+  {name:'Portugal',      img:'https://upload.wikimedia.org/wikipedia/commons/5/5c/Flag_of_Portugal.svg', flag:'https://flagcdn.com/w40/pt.png'},
+  {name:'Argentina',     img:'https://upload.wikimedia.org/wikipedia/commons/1/1a/Flag_of_Argentina.svg', flag:'https://flagcdn.com/w40/ar.png'},
+  {name:'Liverpool',     img:'https://upload.wikimedia.org/wikipedia/commons/0/0c/Liverpool_FC.svg', flag:'https://flagcdn.com/w40/gb-eng.png'},
+  {name:'Bayern',        img:'https://upload.wikimedia.org/wikipedia/commons/1/1b/FC_Bayern_M%C3%BCnchen_logo_%282017%29.svg', flag:'https://flagcdn.com/w40/de.png'},
+  {name:'PSG',           img:'https://upload.wikimedia.org/wikipedia/commons/a/a7/Paris_Saint-Germain_F.C..svg', flag:'https://flagcdn.com/w40/fr.png'},
+];
+const LEAGUE_POOL = [
+  {name:'Champions League', img:'https://upload.wikimedia.org/wikipedia/commons/b/bf/UEFA_Champions_League_logo_2.svg', flag:'https://flagcdn.com/w40/eu.png'},
+  {name:'Premier League',  img:'https://upload.wikimedia.org/wikipedia/commons/f/f2/Premier_League_Logo.svg', flag:'https://flagcdn.com/w40/gb-eng.png'},
+  {name:'Europa League',   img:'https://upload.wikimedia.org/wikipedia/commons/8/84/UEFA_Europa_League_logo.svg', flag:'https://flagcdn.com/w40/eu.png'},
+  {name:'LaLiga',          img:'https://upload.wikimedia.org/wikipedia/commons/0/0f/LaLiga_logo_2023.svg', flag:'https://flagcdn.com/w40/es.png'},
+  {name:'Serie A',         img:'https://upload.wikimedia.org/wikipedia/commons/e/e9/Serie_A_logo_2022.svg', flag:'https://flagcdn.com/w40/it.png'},
+  {name:'Bundesliga',      img:'https://upload.wikimedia.org/wikipedia/commons/d/df/Bundesliga_logo_%282017%29.svg', flag:'https://flagcdn.com/w40/de.png'},
+];
+
+let onbTab = 'teams';
+const selected = new Set();
+
+function renderOnb(){
+  const pool = onbTab === 'teams' ? TEAM_POOL : LEAGUE_POOL;
+  $('#onb-grid').innerHTML = pool.map((t,i)=>`
+    <div class="pick" data-idx="${i}">
+      <div class="ring">
+        <img src="${t.img}" alt="" onerror="this.style.opacity=.4">
+        <img class="flag" src="${t.flag}" alt="" onerror="this.style.display='none'">
+      </div>
+      <div class="lbl">${t.name}</div>
+    </div>
+  `).join('');
+  $$('.pick').forEach(p=>{
+    const item = pool[+p.dataset.idx];
+    if(selected.has(item.name)) p.classList.add('on');
+    p.onclick = ()=>{
+      if(selected.has(item.name)) selected.delete(item.name);
+      else selected.add(item.name);
+      p.classList.toggle('on');
+      updateSel();
+    };
+  });
+  updateSel();
+}
+function updateSel(){
+  $('#sel-count').textContent = selected.size;
+  $('#sel-row').innerHTML = [...selected].slice(0,4).map(n=>{
+    const pool = [...TEAM_POOL,...LEAGUE_POOL];
+    const it = pool.find(x=>x.name===n);
+    return `<div class="chip"><img src="${it?.img||''}" alt=""><span class="x">×</span></div>`;
+  }).join('');
+  $('#onb-continue').disabled = selected.size === 0;
+}
+$$('.tabs button').forEach(b=>{
+  b.onclick = ()=>{
+    $$('.tabs button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    onbTab = b.dataset.tab;
+    $('#onb-title').textContent = 'Favourites';
+    renderOnb();
+  };
+});
+$('#onb-search').oninput = (e)=>{
+  const q = e.target.value.toLowerCase();
+  $$('.pick').forEach(p=>{
+    const name = p.querySelector('.lbl').textContent.toLowerCase();
+    p.style.display = name.includes(q) ? '' : 'none';
+  });
+};
+$('#onb-continue').onclick = ()=>{
+  const data = {
+    name:'Richard',
+    last:'Lughano',
+    username:'richard_lughano',
+    jersey:'26',
+    favs:[...selected]
+  };
+  localStorage.setItem('433_user', JSON.stringify(data));
+  applyUser(data);
+  $('#bottom-nav').style.display = 'flex';
+  showScreen('home');
+  boot();
+};
+$('#onb-skip').onclick = ()=>{
+  const data = {name:'Richard', last:'Lughano', username:'richard_lughano', jersey:'26', favs:['Real Madrid']};
+  localStorage.setItem('433_user', JSON.stringify(data));
+  applyUser(data);
+  $('#bottom-nav').style.display = 'flex';
+  showScreen('home');
+  boot();
+};
+function applyUser(u){
+  $('#p-username').textContent = u.username || 'richard_lughano';
+  $('#p-name').textContent = u.name || 'Richard';
+  const pool = [...TEAM_POOL,...LEAGUE_POOL];
+  $('#fav-list').innerHTML = (u.favs||[]).map(n=>{
+    const it = pool.find(x=>x.name===n);
+    return `<div class="fav"><div class="ring"><img src="${it?.img||''}" alt=""></div><span>${n}</span></div>`;
+  }).join('') || '<div style="color:#8a9099;font-size:13px">No favourites yet.</div>';
+}
+renderOnb();
+$('#fav-add').onclick = ()=>{
+  localStorage.removeItem('433_user');
+  location.reload();
+};
+$$('.bottom-nav button').forEach(b=>{
+  b.onclick = ()=> showScreen(b.dataset.screen);
+});
+
+/* =========================================================
+   3) HOME + MATCHES + VIDEO PLAYER
+   ========================================================= */
+let matchesCache = [];
+
+function statusClass(s){
+  if(!s) return 'upcoming';
+  s = s.toLowerCase();
+  if(s.includes('end') || s.includes('finish')) return 'ended';
+  if(s.includes('live') || s.includes('play')) return 'live';
+  return 'upcoming';
+}
+function statusLabel(s, cls){
+  if(s === 'MatchEnded' || cls === 'ended') return 'Full Time';
+  if(cls === 'live') return 'Live';
+  return 'Upcoming';
+}
+function fmtTime(ms){
+  const s = Math.floor((Date.now()-ms)/1000);
+  if(s<60) return s+'s';
+  if(s<3600) return Math.floor(s/60)+'m';
+  if(s<86400) return Math.floor(s/3600)+'h';
+  return Math.floor(s/86400)+'d';
+}
+
+async function loadMatches(){
+  try{
+    const j = await api('/livescore2');
+    const list = j?.result?.data?.list || [];
+    matchesCache = list;
+    renderMatches(list);
+  }catch(e){
+    const html = `<div class="err">Couldn't load matches. ${e.message}</div>`;
+    $('#match-list').innerHTML = html;
+    $('#match-list-2').innerHTML = html;
+  }
+}
+function renderMatches(list){
+  if(!list.length){
+    $('#match-list').innerHTML = '<div class="err">No matches right now.</div>';
+    $('#match-list-2').innerHTML = '<div class="err">No matches right now.</div>';
+    return;
+  }
+  const html = list.slice(0,15).map((m,idx)=>{
+    const t1 = m.team1||{}, t2 = m.team2||{};
+    const s1 = parseInt(t1.score||0), s2 = parseInt(t2.score||0);
+    const cls = statusClass(m.status);
+    const w1 = s1>s2 ? 'win':'', w2 = s2>s1 ? 'win':'';
+    const hasStream = !!(m.playPath || (m.playSource && m.playSource.length));
+    return `
+      <div class="match" data-idx="${idx}">
+        <div class="match-top">
+          <span>${(m.type||'Football').toUpperCase()}</span>
+          <span class="pill ${cls}">${statusLabel(m.status,cls)}</span>
+        </div>
+        <div class="row-team ${w1}">
+          <img src="${t1.avatar||''}" onerror="this.style.visibility='hidden'">
+          <div class="nm">${t1.name||'TBD'}</div>
+          <div class="sc">${t1.score ?? '-'}</div>
+        </div>
+        <div class="divider"></div>
+        <div class="row-team ${w2}">
+          <img src="${t2.avatar||''}" onerror="this.style.visibility='hidden'">
+          <div class="nm">${t2.name||'TBD'}</div>
+          <div class="sc">${t2.score ?? '-'}</div>
+        </div>
+        ${hasStream ? `<button class="btn-watch" data-watch="${idx}">Watch Live</button>` : ''}
+      </div>
+    `;
+  }).join('');
+  $('#match-list').innerHTML = html;
+  $('#match-list-2').innerHTML = html;
+  $$('[data-watch]').forEach(b=>{
+    b.onclick = (e)=>{ e.stopPropagation(); openPlayer(matchesCache[+b.dataset.watch]); };
+  });
+}
+
+/* ---------- VIDEO PLAYER (HLS in-app) ---------- */
+let hls = null;
+function openPlayer(m){
+  if(!m) return;
+  const sources = [];
+  if(m.playPath) sources.push({title:'Main Feed', path:m.playPath});
+  (m.playSource||[]).forEach((s,i)=>sources.push({
+    title: s.title || ('Channel '+(i+1)),
+    path: s.path
+  }));
+  if(!sources.length){ toast('No stream available'); return; }
+
+  $('#player-title').textContent =
+    `${m.team1?.name||''} vs ${m.team2?.name||''}`;
+  $('#player').classList.add('on');
+  document.body.style.overflow = 'hidden';
+
+  $('#channels').innerHTML = sources.map((s,i)=>
+    `<button data-ch="${i}" class="${i===0?'on':''}">${s.title}</button>`
+  ).join('');
+  $$('#channels button').forEach(b=>{
+    b.onclick = ()=>{
+      $$('#channels button').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on');
+      playSource(sources[+b.dataset.ch].path);
+    };
+  });
+  playSource(sources[0].path);
+}
+function playSource(url){
+  const v = $('#video');
+  if(hls){ hls.destroy(); hls = null; }
+
+  // If it's an m3u8, use HLS.js (works in Chrome/Firefox/Android WebView)
+  if(url.includes('.m3u8')){
+    if(v.canPlayType('application/vnd.apple.mpegurl')){
+      v.src = url; // Safari / iOS native
+    }else if(window.Hls && Hls.isSupported()){
+      hls = new Hls({lowLatencyMode:true, enableWorker:true});
+      hls.loadSource(url);
+      hls.attachMedia(v);
+    }else{
+      $('#player-note').textContent = 'HLS not supported in this browser.';
+      return;
+    }
+  }else{
+    // Other formats — try direct
+    v.src = url;
+  }
+  v.play().catch(()=>{});
+  $('#player-note').textContent = 'Streaming inside the app. No redirects.';
+}
+$('#player-close').onclick = ()=>{
+  $('#player').classList.remove('on');
+  document.body.style.overflow = '';
+  const v = $('#video'); v.pause(); v.removeAttribute('src'); v.load();
+  if(hls){ hls.destroy(); hls = null; }
+};
+
+/* ---------- NEWS ---------- */
+async function loadNews(){
+  try{
+    const j = await api('/football/news');
+    const items = j?.result?.data?.items || [];
+    if(!items.length){ $('#news-list').innerHTML = '<div class="err">No news.</div>'; return; }
+    $('#news-list').innerHTML = items.slice(0,6).map(n=>{
+      const badges = (n.teams||[]).slice(0,2).map(t=>
+        `<img src="${t.avatar||''}" onerror="this.style.display='none'">`
+      ).join('');
+      const more = (n.teams && n.teams.length>2) ? `<span class="more">+${n.teams.length-2}</span>` : '';
+      return `
+        <div class="news">
+          ${n.cover?.url ? `<img src="${n.cover.url}" onerror="this.style.display='none'">` : ''}
+          <div class="info">
+            <h3>${n.title||''}</h3>
+            <div class="meta">
+              <div class="badges">${badges}${more}</div>
+              <span style="margin-left:auto">${fmtTime(parseInt(n.createdAt||Date.now()))}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+    // Use first news cover as hero
+    if(items[0]?.cover?.url) $('#hero-img').src = items[0].cover.url;
+    if(items[0]?.title){
+      $('#hero-title').textContent = items[0].title.slice(0,60);
+      $('#hero-tag').textContent = 'News';
+      $('#hero-time').textContent = fmtTime(parseInt(items[0].createdAt||Date.now()));
+    }
+  }catch(e){
+    $('#news-list').innerHTML = `<div class="err">News failed. ${e.message}</div>`;
+  }
+}
+
+/* ---------- BOOT ---------- */
+function boot(){
+  loadMatches();
+  loadNews();
+  setInterval(loadMatches, 30000);
+}
+</script>
 </body>
 </html>
